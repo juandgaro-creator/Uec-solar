@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Solar - Reservas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background-color: #f8fafc;
+        }
+        
+        .hidden { display: none !important; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #ea580c, #eab308);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .mole-hole { 
+            background: radial-gradient(circle, #5c3a21 0%, #3e2723 100%);
+            border-radius: 50%; 
+            position: relative; 
+            overflow: hidden; 
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.8), 0 4px 0 #2e1a0f;
+            border: 4px solid #4a2e1b;
+        }
+        .mole { 
+            font-size: 3.5rem; 
+            text-align: center; 
+            line-height: 100px; 
+            cursor: pointer; 
+            user-select: none; 
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            transform: translateY(100%); 
+            filter: drop-shadow(0 10px 5px rgba(0,0,0,0.5));
+        }
+        .mole.up { transform: translateY(10px); }
+
+        .tictactoe-cell { 
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 4rem; cursor: pointer; user-select: none; 
+            transition: all 0.2s;
+        }
+        .tictactoe-cell:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        
+        .c4-grid { 
+            background: linear-gradient(145deg, #2563eb, #1d4ed8);
+            padding: 12px; border-radius: 16px; 
+            display: inline-grid; 
+            grid-template-columns: repeat(7, 50px); 
+            grid-template-rows: repeat(6, 50px); 
+            gap: 8px; 
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.2), 0 10px 20px rgba(0,0,0,0.15);
+        }
+        .c4-cell { 
+            border-radius: 50%; 
+            background-color: #0f172a; 
+            border: none; 
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.4);
+            transition: background-color 0.3s;
+        }
+        .c4-red { background: radial-gradient(circle at 30% 30%, #ef4444, #991b1b); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .c4-yellow { background: radial-gradient(circle at 30% 30%, #fde047, #a16207); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+
+        .memory-card { 
+            perspective: 1000px;
+            cursor: pointer; 
+            height: 90px;
+        }
+        .memory-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.5s;
+            transform-style: preserve-3d;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .memory-card.flipped .memory-card-inner, .memory-card.matched .memory-card-inner {
+            transform: rotateY(180deg);
+        }
+        .memory-card-front, .memory-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 2.5rem;
+        }
+        .memory-card-front {
+            background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+            color: transparent;
+        }
+        /* Decoración para el dorso de la carta */
+        .memory-card-front::after {
+            content: '☀️';
+            font-size: 1.5rem;
+            color: #94a3b8;
+            opacity: 0.5;
+        }
+        .memory-card-back {
+            background-color: white;
+            transform: rotateY(180deg);
+            border: 2px solid #f97316;
+        }
+        .memory-card.matched .memory-card-back {
+            background-color: #fef3c7;
+            border-color: #eab308;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen">
+
+    <!-- PANTALLA DE LOGIN -->
+    <div id="login-view" class="min-h-screen flex items-center justify-center p-4 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-slate-900">
+        <div class="glass-panel p-10 rounded-3xl w-full max-w-md text-center transform transition-all hover:scale-[1.01] duration-300 relative overflow-hidden">
+            <!-- Adorno visual -->
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-500 to-yellow-400"></div>
+            
+            <div class="mb-8">
+                <div class="inline-block bg-orange-100 p-4 rounded-full mb-4 shadow-inner">
+                    <span class="text-5xl">☀️</span>
+                </div>
+                <h1 class="text-4xl font-bold text-slate-800 mb-2">El Solar</h1>
+                <p class="text-slate-500 font-medium">Reserva tus espacios de juego</p>
+            </div>
+            
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5 text-left">
+                <div>
+                    <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">Correo Institucional</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
+                        </div>
+                        <input type="email" id="email" required placeholder="nombre.apellido@uexternado.edu.co" 
+                            class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition text-slate-700 font-medium">
+                    </div>
+                    <p id="login-error" class="text-xs text-red-500 mt-2 font-medium hidden bg-red-50 p-2 rounded-md border border-red-100">
+                        ⚠️ Solo se admiten correos @uexternado.edu.co
+                    </p>
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-orange-500/30 transition transform hover:-translate-y-0.5">
+                    Ingresar al Sistema
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PANTALLA PRINCIPAL DE LA APP -->
+    <div id="app-view" class="hidden min-h-screen flex flex-col bg-slate-50">
+        
+        <!-- Navbar Moderno -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">☀️</span>
+                    <h1 class="text-2xl font-bold gradient-text">El Solar</h1>
+                </div>
+                <div class="flex items-center gap-4 bg-slate-50 py-2 px-4 rounded-full border border-slate-200 shadow-inner">
+                    <div class="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm" id="user-avatar">
+                        U
+                    </div>
+                    <span id="user-display" class="font-semibold text-slate-700 hidden sm:block"></span>
+                    <div class="w-px h-6 bg-slate-300 mx-1"></div>
+                    <button onclick="logout()" class="text-slate-500 hover:text-red-500 font-medium text-sm transition flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        Salir
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navegación de Pestañas (Modernizada) -->
+        <div class="bg-white border-b border-slate-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 flex gap-6">
+                <button onclick="switchTab('reservations')" id="tab-reservations" class="py-4 px-2 border-b-4 font-bold text-orange-600 border-orange-500 transition-colors flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Reservar Espacios
+                </button>
+                <button onclick="switchTab('minigames')" id="tab-minigames" class="py-4 px-2 border-b-4 font-bold text-slate-400 border-transparent hover:text-slate-600 transition-colors flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Zona de Espera (Juegos)
+                </button>
+            </div>
+        </div>
+
+        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
+            
+            <!-- CONTENEDOR DE NOTIFICACIONES -->
+            <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-3"></div>
+
+            <!-- PESTAÑA: RESERVAS -->
+            <div id="reservations-section" class="space-y-8 animate-fade-in">
+                <!-- Tarjeta Principal de Acción -->
+                <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-3xl p-8 shadow-xl text-white flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 opacity-10">
+                        <span class="text-9xl">🎾</span>
+                    </div>
+                    <div class="relative z-10">
+                        <span class="bg-orange-500/20 text-orange-300 text-xs font-bold px-3 py-1 rounded-full border border-orange-500/30 uppercase tracking-wide">Área Deportiva y Lúdica</span>
+                        <h2 class="text-3xl font-bold mt-4 mb-2">Agendar Espacio Físico</h2>
+                        <p class="text-slate-300 font-medium">Toda reserva dura exactamente 1 hora para garantizar rotación.</p>
+                    </div>
+                    <button onclick="openBookingModal()" class="relative z-10 bg-orange-500 hover:bg-orange-400 text-white px-6 py-4 rounded-2xl font-bold text-lg shadow-lg shadow-orange-500/40 transition transform hover:-translate-y-1 flex items-center gap-2 whitespace-nowrap">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Nueva Reserva
+                    </button>
+                </div>
+
+                <!-- Lista de Reservas Actuales -->
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-800 text-xl flex items-center gap-2">
+                            <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                            Agenda del Día
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-xs text-slate-500 uppercase tracking-wider font-semibold">
+                                    <th class="p-5 border-b border-slate-200">Actividad / Elemento</th>
+                                    <th class="p-5 border-b border-slate-200">Usuario</th>
+                                    <th class="p-5 border-b border-slate-200">Horario Asignado</th>
+                                    <th class="p-5 border-b border-slate-200 text-right">Gestión</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookings-list" class="text-sm divide-y divide-slate-100">
+                                <!-- Llenado por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="empty-bookings" class="p-12 text-center text-slate-500 flex flex-col items-center justify-center">
+                        <span class="text-5xl mb-4 opacity-50">📋</span>
+                        <p class="font-medium text-lg">El tablero está limpio</p>
+                        <p class="text-sm mt-1">No hay reservas agendadas por el momento.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PESTAÑA: MINIJUEGOS -->
+            <div id="minigames-section" class="hidden space-y-8 animate-fade-in">
+                <div class="text-center max-w-2xl mx-auto">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-2">Zona de Espera</h2>
+                    <p class="text-slate-500 font-medium">Relájate y diviértete con estos minijuegos mientras llega la hora de tu reserva oficial en El Solar.</p>
+                </div>
+
+                <!-- Selector de Juegos -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6" id="game-selector">
+                    <button onclick="startMiniGame('mole')" class="group p-6 bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-md hover:border-orange-500 transition-all text-center flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition-transform">🐹</div>
+                        <div class="font-bold text-slate-700">Caza al Topo</div>
+                        <div class="text-xs text-slate-400 mt-1">Reflejos rápidos</div>
+                    </button>
+                    <button onclick="startMiniGame('tictactoe')" class="group p-6 bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-md hover:border-blue-500 transition-all text-center flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition-transform">❌</div>
+                        <div class="font-bold text-slate-700">Triqui</div>
+                        <div class="text-xs text-slate-400 mt-1">Clásico 3 en línea</div>
+                    </button>
+                    <button onclick="startMiniGame('c4')" class="group p-6 bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-md hover:border-red-500 transition-all text-center flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition-transform">🔴</div>
+                        <div class="font-bold text-slate-700">4 en Raya</div>
+                        <div class="text-xs text-slate-400 mt-1">Estrategia pura</div>
+                    </button>
+                    <button onclick="startMiniGame('memory')" class="group p-6 bg-white border border-slate-200 rounded-3xl shadow-sm hover:shadow-md hover:border-purple-500 transition-all text-center flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition-transform">🃏</div>
+                        <div class="font-bold text-slate-700">Parejas</div>
+                        <div class="text-xs text-slate-400 mt-1">Entrena tu memoria</div>
+                    </button>
+                </div>
+
+                <!-- Contenedores de los Minijuegos -->
+                <div id="active-game-container" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hidden flex-col items-center relative overflow-hidden">
+                    
+                    <!-- Topo -->
+                    <div id="game-mole" class="hidden w-full max-w-lg mx-auto text-center">
+                        <h3 class="text-2xl font-bold mb-4 text-slate-800">Caza al Topo</h3>
+                        <div class="flex justify-between items-center mb-8 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                            <div class="text-left">
+                                <span class="text-slate-500 text-sm font-bold uppercase tracking-wider">Puntuación</span>
+                                <div id="mole-score" class="text-3xl font-black text-orange-500">0</div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-slate-500 text-sm font-bold uppercase tracking-wider">Tiempo Restante</span>
+                                <div class="text-3xl font-black text-slate-700"><span id="mole-time">30</span>s</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 mx-auto w-72 h-72 bg-emerald-600 p-4 rounded-2xl shadow-inner border-4 border-emerald-700" id="mole-grid">
+                            <!-- Agujeros JS -->
+                        </div>
+                        <button onclick="startMoleGame()" class="mt-8 bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-full font-bold shadow-lg transition-transform hover:scale-105">Empezar a Jugar</button>
+                    </div>
+
+                    <!-- Triqui -->
+                    <div id="game-tictactoe" class="hidden w-full max-w-sm mx-auto text-center">
+                        <h3 class="text-2xl font-bold mb-2 text-slate-800">Triqui (3 en línea)</h3>
+                        <div class="mb-6 bg-slate-50 py-2 px-4 rounded-full inline-block border border-slate-200">
+                            <span id="ttt-status" class="font-bold text-lg text-slate-700">Turno de: ❌</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3 w-72 h-72 mx-auto bg-slate-200 p-3 rounded-2xl shadow-inner" id="ttt-grid">
+                            <!-- Celdas JS -->
+                        </div>
+                        <button onclick="resetTicTacToe()" class="mt-8 bg-slate-800 hover:bg-slate-700 text-white px-8 py-3 rounded-full font-bold shadow-lg transition-transform hover:scale-105">Reiniciar Partida</button>
+                    </div>
+
+                    <!-- 4 en Raya -->
+                    <div id="game-c4" class="hidden w-full max-w-md mx-auto text-center overflow-x-auto">
+                        <h3 class="text-2xl font-bold mb-2 text-slate-800">4 en Raya</h3>
+                        <div class="mb-6 bg-slate-50 py-2 px-4 rounded-full inline-block border border-slate-200">
+                            <span id="c4-status" class="font-bold text-lg text-slate-700">Turno de: 🔴 Rojas</span>
+                        </div>
+                        <div class="flex justify-center">
+                            <div class="c4-grid" id="c4-grid">
+                                <!-- Celdas JS -->
+                            </div>
+                        </div>
+                        <button onclick="resetC4()" class="mt-8 bg-slate-800 hover:bg-slate-700 text-white px-8 py-3 rounded-full font-bold shadow-lg transition-transform hover:scale-105">Reiniciar Partida</button>
+                    </div>
+
+                    <!-- Memoria -->
+                    <div id="game-memory" class="hidden w-full max-w-lg mx-auto text-center">
+                        <h3 class="text-2xl font-bold mb-2 text-slate-800">Encuentra las Parejas</h3>
+                        <div class="mb-6 bg-slate-50 py-2 px-6 rounded-full inline-block border border-slate-200">
+                            <span class="text-slate-600 font-semibold uppercase tracking-wider text-sm">Movimientos: <span id="memory-moves" class="font-black text-xl text-purple-600">0</span></span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-4 w-full bg-slate-100 p-6 rounded-3xl shadow-inner border border-slate-200" id="memory-grid">
+                            <!-- Cartas JS -->
+                        </div>
+                        <button onclick="resetMemory()" class="mt-8 bg-purple-500 hover:bg-purple-600 text-white px-8 py-3 rounded-full font-bold shadow-lg transition-transform hover:scale-105">Reiniciar Partida</button>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL DE RESERVA -->
+    <div id="booking-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50 transition-opacity">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-95" id="booking-modal-content">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Configurar Reserva
+                </h3>
+                <button onclick="closeBookingModal()" class="text-slate-400 hover:text-red-500 font-bold w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center transition">&times;</button>
+            </div>
+            
+            <form id="booking-form" onsubmit="submitBooking(event)" class="p-8 space-y-6">
+                
+                <!-- SELECTOR DE ELEMENTOS ACTUALIZADO -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">¿Qué deseas solicitar?</label>
+                    <select id="booking-game" required class="w-full border-2 border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-medium text-slate-700 bg-slate-50 transition">
+                        <option value="" disabled selected>Selecciona una opción...</option>
+                        <optgroup label="Deportes de Mesa">
+                            <option value="Mesas de ping pong">Mesas de ping pong</option>
+                        </optgroup>
+                        <optgroup label="Videojuegos">
+                            <option value="Consolas de videojuegos">Consolas de videojuegos (FIFA y otros)</option>
+                        </optgroup>
+                        <optgroup label="Juegos de Mesa y Cartas">
+                            <option value="Juegos de cartas">Juegos de cartas (Poker, Española)</option>
+                            <option value="UNO">UNO</option>
+                            <option value="Juegos de mesa">Juegos de mesa (Generales)</option>
+                            <option value="Ajedrez">Ajedrez</option>
+                            <option value="Rummikub">Rummikub</option>
+                        </optgroup>
+                        <optgroup label="Deportes de Campo">
+                            <option value="Balones de fútbol">Balón de fútbol</option>
+                            <option value="Balones de baloncesto">Balón de baloncesto</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-3">¿Cuándo lo necesitas? (Duración: 1 hora)</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="relative flex flex-col p-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:bg-slate-50 transition peer-checked:border-orange-500">
+                            <input type="radio" name="booking-time" value="now" checked onchange="toggleTimeSelector()" class="absolute opacity-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xl">⚡</span>
+                                <span class="font-bold text-slate-700">Ahora mismo</span>
+                            </div>
+                            <span class="text-xs text-slate-500">Inicia en este instante.</span>
+                        </label>
+                        <label class="relative flex flex-col p-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:bg-slate-50 transition">
+                            <input type="radio" name="booking-time" value="later" onchange="toggleTimeSelector()" class="absolute opacity-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xl">📅</span>
+                                <span class="font-bold text-slate-700">Programar</span>
+                            </div>
+                            <span class="text-xs text-slate-500">Elegir un bloque horario.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="time-selector-container" class="hidden animate-fade-in">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Selecciona el bloque (1 Hora)</label>
+                    <select id="booking-slot" class="w-full border-2 border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-medium text-slate-700 bg-slate-50 transition">
+                        <!-- Llenado por JS -->
+                    </select>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                    <button type="button" onclick="closeBookingModal()" class="px-5 py-3 text-sm font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition">Cancelar</button>
+                    <button type="submit" class="px-5 py-3 text-sm font-bold text-white bg-orange-500 rounded-xl hover:bg-orange-600 shadow-md shadow-orange-500/30 transition">Confirmar Reserva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- LÓGICA JAVASCRIPT -->
+    <script>
+        // --- ESTADO GLOBAL ---
+        let currentUser = null;
+        let bookings = [];
+
+        // --- SISTEMA DE HORARIOS ---
+        const timeSlots = [
+            { id: '08:00-09:00', label: '08:00 AM - 09:00 AM' },
+            { id: '09:00-10:00', label: '09:00 AM - 10:00 AM' },
+            { id: '10:00-11:00', label: '10:00 AM - 11:00 AM' },
+            { id: '11:00-12:00', label: '11:00 AM - 12:00 PM' },
+            { id: '12:00-13:00', label: '12:00 PM - 01:00 PM' },
+            { id: '13:00-14:00', label: '01:00 PM - 02:00 PM' },
+            { id: '14:00-15:00', label: '02:00 PM - 03:00 PM' },
+            { id: '15:00-16:00', label: '03:00 PM - 04:00 PM' },
+            { id: '16:00-17:00', label: '04:00 PM - 05:00 PM' },
+            { id: '17:00-18:00', label: '05:00 PM - 06:00 PM' }
+        ];
+
+        // Efectos visuales para los radios personalizados en el modal
+        document.querySelectorAll('input[name="booking-time"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('input[name="booking-time"]').forEach(r => {
+                    r.parentElement.classList.remove('border-orange-500', 'bg-orange-50');
+                    r.parentElement.classList.add('border-slate-200');
+                });
+                if(this.checked) {
+                    this.parentElement.classList.add('border-orange-500', 'bg-orange-50');
+                    this.parentElement.classList.remove('border-slate-200');
+                }
+            });
+        });
+        // Set initial state
+        document.querySelector('input[name="booking-time"][value="now"]').parentElement.classList.add('border-orange-500', 'bg-orange-50');
+
+        // --- AUTENTICACIÓN ---
+        function handleLogin(e) {
+            e.preventDefault();
+            const emailInput = document.getElementById('email').value.trim();
+            const errorMsg = document.getElementById('login-error');
+            
+            // Regex estricta para nombre.apellido@uexternado.edu.co
+            const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]*uexternado\.edu\.co$/;
+
+            if (emailRegex.test(emailInput)) {
+                errorMsg.classList.add('hidden');
+                currentUser = emailInput;
+                
+                // Formatear display name
+                const namePart = emailInput.split('@')[0].split('.');
+                const displayName = namePart.map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
+                
+                document.getElementById('user-display').textContent = displayName;
+                document.getElementById('user-avatar').textContent = displayName.charAt(0);
+                
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('app-view').classList.remove('hidden');
+                initApp();
+            } else {
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('app-view').classList.add('hidden');
+            document.getElementById('email').value = '';
+        }
+
+        // --- INICIALIZACIÓN ---
+        function initApp() {
+            populateTimeSlots();
+            renderBookings();
+            
+            // Inicializar vistas de juegos sin arrancarlos
+            setupTicTacToe();
+            setupC4();
+            setupMemory();
+        }
+
+        // --- NAVEGACIÓN ---
+        function switchTab(tabId) {
+            const resTab = document.getElementById('tab-reservations');
+            const gameTab = document.getElementById('tab-minigames');
+            const resSec = document.getElementById('reservations-section');
+            const gameSec = document.getElementById('minigames-section');
+
+            if (tabId === 'reservations') {
+                resTab.className = "py-4 px-2 border-b-4 font-bold text-orange-600 border-orange-500 transition-colors flex items-center gap-2";
+                gameTab.className = "py-4 px-2 border-b-4 font-bold text-slate-400 border-transparent hover:text-slate-600 transition-colors flex items-center gap-2";
+                resSec.classList.remove('hidden');
+                gameSec.classList.add('hidden');
+            } else {
+                gameTab.className = "py-4 px-2 border-b-4 font-bold text-orange-600 border-orange-500 transition-colors flex items-center gap-2";
+                resTab.className = "py-4 px-2 border-b-4 font-bold text-slate-400 border-transparent hover:text-slate-600 transition-colors flex items-center gap-2";
+                gameSec.classList.remove('hidden');
+                resSec.classList.add('hidden');
+            }
+        }
+
+        // --- SISTEMA DE RESERVAS ---
+        function populateTimeSlots() {
+            const select = document.getElementById('booking-slot');
+            select.innerHTML = '';
+            timeSlots.forEach(slot => {
+                const opt = document.createElement('option');
+                opt.value = slot.id;
+                opt.textContent = slot.label;
+                select.appendChild(opt);
+            });
+        }
+
+        function openBookingModal() {
+            const modal = document.getElementById('booking-modal');
+            const content = document.getElementById('booking-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeBookingModal() {
+            const modal = document.getElementById('booking-modal');
+            const content = document.getElementById('booking-modal-content');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('booking-form').reset();
+                document.querySelector('input[name="booking-time"][value="now"]').click();
+                toggleTimeSelector();
+            }, 200);
+        }
+
+        function toggleTimeSelector() {
+            const isLater = document.querySelector('input[name="booking-time"]:checked').value === 'later';
+            document.getElementById('time-selector-container').classList.toggle('hidden', !isLater);
+        }
+
+        function submitBooking(e) {
+            e.preventDefault();
+            const game = document.getElementById('booking-game').value;
+            if(!game) {
+                showToast('Por favor, selecciona una actividad o elemento.', 'error');
+                return;
+            }
+
+            const timeType = document.querySelector('input[name="booking-time"]:checked').value;
+            
+            let startTime, endTime, displayTime;
+
+            if (timeType === 'now') {
+                const now = new Date();
+                startTime = now.toTimeString().substring(0, 5);
+                const end = new Date(now.getTime() + 60*60*1000);
+                endTime = end.toTimeString().substring(0, 5);
+                displayTime = `<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold mr-2">AHORA</span> ${startTime} - ${endTime}`;
+            } else {
+                const slot = document.getElementById('booking-slot').value; // ej: "10:00-11:00"
+                [startTime, endTime] = slot.split('-');
+                displayTime = `<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold mr-2">PROGRAMADA</span> ${startTime} - ${endTime}`;
+            }
+
+            // Validar choque muy básico
+            const hasConflict = bookings.some(b => 
+                b.game === game && 
+                ((startTime >= b.start && startTime < b.end) || (endTime > b.start && endTime <= b.end) || (startTime <= b.start && endTime >= b.end))
+            );
+
+            if (hasConflict) {
+                showToast(`Conflicto: Ya existe una reserva para ${game} en ese rango horario.`, 'error');
+                return;
+            }
+
+            const namePart = currentUser.split('@')[0].split('.');
+            const displayName = namePart.map(n => n.charAt(0).toUpperCase() + n.slice(1)).join(' ');
+
+            const newBooking = {
+                id: Date.now(),
+                userEmail: currentUser,
+                userName: displayName,
+                game: game,
+                start: startTime,
+                end: endTime,
+                display: displayTime
+            };
+
+            bookings.push(newBooking);
+            renderBookings();
+            closeBookingModal();
+            showToast(`Reservaste ${game} por 1 hora con éxito.`, 'success');
+        }
+
+        function renderBookings() {
+            const list = document.getElementById('bookings-list');
+            const empty = document.getElementById('empty-bookings');
+            
+            list.innerHTML = '';
+            
+            if (bookings.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+
+            // Ordenar por hora de inicio
+            bookings.sort((a,b) => a.start.localeCompare(b.start)).forEach(b => {
+                const isMine = b.userEmail === currentUser;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                
+                // Asignar emoji según juego para la tabla
+                let emoji = "🎲";
+                if(b.game.includes('ping pong')) emoji = "🏓";
+                else if(b.game.includes('Consolas')) emoji = "🎮";
+                else if(b.game.includes('cartas') || b.game === 'UNO') emoji = "🃏";
+                else if(b.game === 'Ajedrez') emoji = "♟️";
+                else if(b.game.includes('fútbol')) emoji = "⚽";
+                else if(b.game.includes('baloncesto')) emoji = "🏀";
+
+                tr.innerHTML = `
+                    <td class="p-5 border-b border-slate-100 font-bold text-slate-800">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${emoji}</span>
+                            ${b.game}
+                        </div>
+                    </td>
+                    <td class="p-5 border-b border-slate-100">
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold">${b.userName.charAt(0)}</div>
+                            <span class="font-medium text-slate-700" title="${b.userEmail}">${b.userName}</span>
+                        </div>
+                    </td>
+                    <td class="p-5 border-b border-slate-100 text-slate-600 font-medium">${b.display}</td>
+                    <td class="p-5 border-b border-slate-100 text-right">
+                        ${isMine ? `<button onclick="deleteBooking(${b.id})" class="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded-lg font-semibold text-sm transition">Cancelar</button>` : `<span class="inline-block px-3 py-1 bg-slate-100 text-slate-400 rounded-lg text-xs font-bold">Ocupado</span>`}
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
+        }
+
+        function deleteBooking(id) {
+            bookings = bookings.filter(b => b.id !== id);
+            renderBookings();
+            showToast('Reserva cancelada correctamente.', 'success');
+        }
+
+        function showToast(msg, type) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const icon = type === 'error' ? '⚠️' : '✅';
+            const colorClass = type === 'error' ? 'bg-white border-l-4 border-red-500 text-slate-800' : 'bg-slate-800 text-white';
+            
+            toast.className = `p-4 rounded-xl shadow-xl flex items-center gap-3 font-medium transform transition-all translate-y-10 opacity-0 ${colorClass}`;
+            toast.innerHTML = `<span class="text-xl">${icon}</span> <span>${msg}</span>`;
+            
+            container.appendChild(toast);
+            
+            // Animar entrada
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+
+            // Animar salida
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // --- CONTROL DE MINIJUEGOS ---
+        function startMiniGame(gameId) {
+            document.getElementById('active-game-container').classList.remove('hidden');
+            
+            // Ocultar todos
+            document.getElementById('game-mole').classList.add('hidden');
+            document.getElementById('game-tictactoe').classList.add('hidden');
+            document.getElementById('game-c4').classList.add('hidden');
+            document.getElementById('game-memory').classList.add('hidden');
+
+            // Mostrar el seleccionado
+            document.getElementById(`game-${gameId}`).classList.remove('hidden');
+            
+            // Limpiar timers activos del topo si se cambia de juego
+            clearInterval(moleInterval);
+            clearTimeout(moleTimeout);
+        }
+
+        // 1. CAZA AL TOPO
+        let moleScore = 0;
+        let moleTimeLeft = 30;
+        let moleInterval;
+        let moleTimeout;
+        let moleActiveHole = null;
+
+        function initMoleGrid() {
+            const grid = document.getElementById('mole-grid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const hole = document.createElement('div');
+                hole.className = 'mole-hole w-full h-full flex items-end justify-center';
+                const mole = document.createElement('div');
+                mole.className = 'mole';
+                mole.textContent = '🐹';
+                mole.onclick = () => whackMole(i);
+                hole.appendChild(mole);
+                grid.appendChild(hole);
+            }
+        }
+        initMoleGrid();
+
+        function startMoleGame() {
+            moleScore = 0;
+            moleTimeLeft = 30;
+            document.getElementById('mole-score').textContent = moleScore;
+            document.getElementById('mole-time').textContent = moleTimeLeft;
+            
+            clearInterval(moleInterval);
+            
+            moleInterval = setInterval(() => {
+                moleTimeLeft--;
+                document.getElementById('mole-time').textContent = moleTimeLeft;
+                if (moleTimeLeft <= 0) {
+                    clearInterval(moleInterval);
+                    clearMoles();
+                    showToast(`¡Tiempo agotado! Puntuación final: ${moleScore}`, 'success');
+                }
+            }, 1000);
+            
+            popMole();
+        }
+
+        function popMole() {
+            if (moleTimeLeft <= 0) return;
+            clearMoles();
+            const holes = document.querySelectorAll('.mole');
+            const randomHole = Math.floor(Math.random() * 9);
+            holes[randomHole].classList.add('up');
+            moleActiveHole = randomHole;
+
+            moleTimeout = setTimeout(() => {
+                holes[randomHole].classList.remove('up');
+                if (moleTimeLeft > 0) popMole();
+            }, Math.random() * 400 + 400); // 400ms - 800ms (Más rápido)
+        }
+
+        function clearMoles() {
+            document.querySelectorAll('.mole').forEach(m => m.classList.remove('up'));
+        }
+
+        function whackMole(index) {
+            if (index === moleActiveHole) {
+                moleScore += 10;
+                document.getElementById('mole-score').textContent = moleScore;
+                
+                // Efecto visual al golpear
+                const mole = document.querySelectorAll('.mole')[index];
+                mole.textContent = '😵';
+                mole.classList.remove('up');
+                
+                setTimeout(() => { mole.textContent = '🐹'; }, 300); // Restaurar cara
+                
+                moleActiveHole = null; // Evitar doble click
+            }
+        }
+
+        // 2. TRIQUI (Tic-Tac-Toe)
+        let tttBoard = Array(9).fill(null);
+        let tttCurrentPlayer = '❌';
+        let tttActive = true;
+
+        function setupTicTacToe() {
+            const grid = document.getElementById('ttt-grid');
+            grid.innerHTML = '';
+            tttBoard = Array(9).fill(null);
+            tttCurrentPlayer = '❌';
+            tttActive = true;
+            document.getElementById('ttt-status').textContent = `Turno de: ${tttCurrentPlayer}`;
+
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'tictactoe-cell';
+                cell.onclick = () => playTicTacToe(i, cell);
+                grid.appendChild(cell);
+            }
+        }
+
+        function playTicTacToe(index, cellElement) {
+            if (!tttActive || tttBoard[index]) return;
+
+            tttBoard[index] = tttCurrentPlayer;
+            cellElement.textContent = tttCurrentPlayer;
+            
+            // Colores según jugador
+            if(tttCurrentPlayer === '❌') cellElement.classList.add('text-blue-500');
+            else cellElement.classList.add('text-red-500');
+
+            if (checkTTTWin()) {
+                document.getElementById('ttt-status').textContent = `¡Ganador: ${tttCurrentPlayer}! 🎉`;
+                tttActive = false;
+                return;
+            }
+
+            if (!tttBoard.includes(null)) {
+                document.getElementById('ttt-status').textContent = `¡Empate! 🤝`;
+                tttActive = false;
+                return;
+            }
+
+            tttCurrentPlayer = tttCurrentPlayer === '❌' ? '⭕' : '❌';
+            document.getElementById('ttt-status').textContent = `Turno de: ${tttCurrentPlayer}`;
+        }
+
+        function checkTTTWin() {
+            const wins = [
+                [0,1,2], [3,4,5], [6,7,8], // Filas
+                [0,3,6], [1,4,7], [2,5,8], // Cols
+                [0,4,8], [2,4,6]           // Diagonales
+            ];
+            return wins.some(comb => {
+                return comb.every(i => tttBoard[i] === tttCurrentPlayer);
+            });
+        }
+
+        function resetTicTacToe() { setupTicTacToe(); }
+
+        // 3. CUATRO EN RAYA
+        const C4_COLS = 7;
+        const C4_ROWS = 6;
+        let c4Board = [];
+        let c4CurrentPlayer = 1; // 1 = Red, 2 = Yellow
+        let c4Active = true;
+
+        function setupC4() {
+            const grid = document.getElementById('c4-grid');
+            grid.innerHTML = '';
+            c4Board = Array(C4_ROWS).fill(null).map(() => Array(C4_COLS).fill(0));
+            c4CurrentPlayer = 1;
+            c4Active = true;
+            document.getElementById('c4-status').textContent = 'Turno de: 🔴 Rojas';
+
+            for (let r = 0; r < C4_ROWS; r++) {
+                for (let c = 0; c < C4_COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'c4-cell cursor-pointer hover:bg-slate-800 transition-colors';
+                    cell.dataset.col = c;
+                    cell.onclick = () => playC4(c);
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function playC4(col) {
+            if (!c4Active) return;
+
+            // Encontrar fila más baja vacía
+            let rowToPlay = -1;
+            for (let r = C4_ROWS - 1; r >= 0; r--) {
+                if (c4Board[r][col] === 0) {
+                    rowToPlay = r;
+                    break;
+                }
+            }
+
+            if (rowToPlay === -1) return; // Columna llena
+
+            c4Board[rowToPlay][col] = c4CurrentPlayer;
+            updateC4Visuals();
+
+            if (checkC4Win(rowToPlay, col)) {
+                const color = c4CurrentPlayer === 1 ? '🔴 Rojas' : '🟡 Amarillas';
+                document.getElementById('c4-status').textContent = `¡Ganador: ${color}! 🎉`;
+                c4Active = false;
+                return;
+            }
+
+            c4CurrentPlayer = c4CurrentPlayer === 1 ? 2 : 1;
+            document.getElementById('c4-status').textContent = `Turno de: ${c4CurrentPlayer === 1 ? '🔴 Rojas' : '🟡 Amarillas'}`;
+        }
+
+        function updateC4Visuals() {
+            const cells = document.querySelectorAll('.c4-cell');
+            let idx = 0;
+            for (let r = 0; r < C4_ROWS; r++) {
+                for (let c = 0; c < C4_COLS; c++) {
+                    cells[idx].className = 'c4-cell cursor-pointer'; // reset
+                    if (c4Board[r][c] === 1) cells[idx].classList.add('c4-red');
+                    if (c4Board[r][c] === 2) cells[idx].classList.add('c4-yellow');
+                    idx++;
+                }
+            }
+        }
+
+        function checkC4Win(r, c) {
+            const p = c4CurrentPlayer;
+            const b = c4Board;
+            
+            const count = (dr, dc) => {
+                let cnt = 0;
+                let nr = r + dr, nc = c + dc;
+                while (nr >= 0 && nr < C4_ROWS && nc >= 0 && nc < C4_COLS && b[nr][nc] === p) {
+                    cnt++; nr += dr; nc += dc;
+                }
+                return cnt;
+            };
+
+            return (count(0, 1) + count(0, -1) >= 3) || 
+                   (count(1, 0) + count(-1, 0) >= 3) || 
+                   (count(1, 1) + count(-1, -1) >= 3) ||
+                   (count(1, -1) + count(-1, 1) >= 3);
+        }
+
+        function resetC4() { setupC4(); }
+
+        // 4. JUEGO DE MEMORIA
+        const memoryEmojis = ['🚀', '🎸', '🍔', '👻', '🏀', '💎', '🎨', '🧩'];
+        let memoryCards = [];
+        let flippedCards = [];
+        let memoryMoves = 0;
+        let matchedPairs = 0;
+        let memoryLock = false;
+
+        function setupMemory() {
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = '';
+            memoryMoves = 0;
+            matchedPairs = 0;
+            flippedCards = [];
+            memoryLock = false;
+            document.getElementById('memory-moves').textContent = memoryMoves;
+
+            // Duplicar y barajar
+            memoryCards = [...memoryEmojis, ...memoryEmojis];
+            memoryCards.sort(() => Math.random() - 0.5);
+
+            memoryCards.forEach((emoji, index) => {
+                const cardContainer = document.createElement('div');
+                cardContainer.className = 'memory-card';
+                cardContainer.dataset.index = index;
+                
+                const cardInner = document.createElement('div');
+                cardInner.className = 'memory-card-inner';
+                
+                const cardFront = document.createElement('div');
+                cardFront.className = 'memory-card-front';
+                
+                const cardBack = document.createElement('div');
+                cardBack.className = 'memory-card-back';
+                cardBack.textContent = emoji;
+                
+                cardInner.appendChild(cardFront);
+                cardInner.appendChild(cardBack);
+                cardContainer.appendChild(cardInner);
+                
+                cardContainer.onclick = () => flipMemoryCard(cardContainer, emoji);
+                grid.appendChild(cardContainer);
+            });
+        }
+
+        function flipMemoryCard(card, emoji) {
+            if (memoryLock || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+
+            card.classList.add('flipped');
+            flippedCards.push({ card, emoji });
+
+            if (flippedCards.length === 2) {
+                memoryMoves++;
+                document.getElementById('memory-moves').textContent = memoryMoves;
+                memoryLock = true;
+                
+                const [card1, card2] = flippedCards;
+
+                if (card1.emoji === card2.emoji) {
+                    // Hay match
+                    setTimeout(() => {
+                        card1.card.classList.add('matched');
+                        card2.card.classList.add('matched');
+                        matchedPairs++;
+                        if(matchedPairs === memoryEmojis.length) {
+                            showToast(`¡Excelente! Ganaste en ${memoryMoves} movimientos.`, 'success');
+                        }
+                        resetMemoryTurn();
+                    }, 500);
+                } else {
+                    // No match
+                    setTimeout(() => {
+                        card1.card.classList.remove('flipped');
+                        card2.card.classList.remove('flipped');
+                        resetMemoryTurn();
+                    }, 1000);
+                }
+            }
+        }
+
+        function resetMemoryTurn() {
+            flippedCards = [];
+            memoryLock = false;
+        }
+
+        function resetMemory() { setupMemory(); }
+
+    </script>
+</body>
+</html>
